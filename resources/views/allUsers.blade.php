@@ -12,7 +12,7 @@
         <div class="row">
             <div class="col-md-10 col-md-offset-2">
                 <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">{{$user->name}}</div>
-                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6"><Button onclick="return followToggle({{$user->id}});" type="Button" class="btn btn-xs btn-primary" id="followButton{{$user->id}}">Follow</Button></div>
+                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6"><Button onclick="return followToggle({{$user->id}});" type="Button" class="btn btn-xs btn-primary" id="followButton{{$user->id}}">Follow</Button>&nbsp;<span class="text-warning" id="{{$user->id}}"></span></div>
                 {!! csrf_field() !!}
             </div>
         </div>
@@ -32,11 +32,24 @@
             url: "{{url('newFollow')}}",
             data: "id="+id,
             success: function(html){
-                alert(html);
+                if(html=="Already Followed")
+                    $('#'+id).html("Already Followed <button class=\"btn btn-primary btn-xs\" onclick=\"return unfollow("+id+");\">Unfollow</button>"); 
                 //$("#status").html(data);
             }
         }); 
-
+    }
+    function unfollow(id){
+        $.ajax({
+            type: "POST",
+            url: "{{url('unFollow')}}",
+            data: "id="+id,
+            success: function(html){
+                if(html=="unfollowed")
+                    $('#'+id).html("unfollowed"); 
+                //$("#status").html(data);
+            }
+        }); 
     }
 </script>
+
 @endsection

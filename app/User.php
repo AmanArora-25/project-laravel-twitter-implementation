@@ -4,6 +4,7 @@ namespace App;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use App\Tweet as Tweet;
+use Auth;
 
 class User extends Authenticatable
 {
@@ -30,5 +31,8 @@ class User extends Authenticatable
     }
     public function followers(){
         return $this->belongsToMany('App\User', 'follows', 'user_id', 'follow_user_id');
+    }
+    public static function allUsers(){
+        return User::where('id','<>',Auth::user()->id);
     }
 }

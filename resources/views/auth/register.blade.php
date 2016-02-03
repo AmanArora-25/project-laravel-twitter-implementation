@@ -42,9 +42,10 @@
                             <label class="col-md-4 control-label">Password</label>
 
                             <div class="col-md-6">
-                                <input type="password" class="form-control" name="password" required>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                                <span id="password_min_length" class="text-warning"></span>
                                 @if ($errors->has('password'))
-                                    <span class="help-block">
+                                    <span class="help-block" id="invalidPassword">
                                         <strong>{{ $errors->first('password') }}</strong>
                                     </span>
                                 @endif
@@ -55,7 +56,7 @@
                             <label class="col-md-4 control-label">Confirm Password</label>
 
                             <div class="col-md-6">
-                                <input type="password" class="form-control" name="password_confirmation" required>
+                                <input type="password" class="form-control" name="password_confirmation" minlength ="6" required>
 
                                 @if ($errors->has('password_confirmation'))
                                     <span class="help-block">
@@ -102,6 +103,16 @@
                 //$("#status").html(data);
             }
         });
+    });
+    $('#password').blur(function(){
+        var password = $('#password').val();
+        if(password.length<6){
+            $('#password_min_length').html("Password must have atleast 6 characters"); 
+            $('#invalidPassword').html(""); 
+        } else {
+            $('#password_min_length').html("");
+            $('#invalidPassword').html("");
+        }
     });
 </script>
 @endsection

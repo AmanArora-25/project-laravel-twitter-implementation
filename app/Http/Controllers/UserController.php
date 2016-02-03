@@ -11,7 +11,7 @@ use App\follow as Follow;
 use Auth;
 use DB;
 
-class HomeController extends Controller
+class UserController extends Controller
 {
     /**
      * Create a new controller instance.
@@ -64,8 +64,15 @@ class HomeController extends Controller
         $tweets             =array();
         foreach ($followscollection as $follower) {
             foreach($follower->tweets()->get() as $tweet){
-                $tweetData                  = array();
+              $tweetData                  = array();
+                if(empty($tweet->user->photo)){
+                  $tweetData['photo']         = "defaultPhoto.jpg";
+                } else {
+                  $tweetData['photo']         = $tweet->user->photo;
+                }
+                $tweetData['id']            = $tweet->id;
                 $tweetData['name']          = $tweet->user->name;
+                $tweetData['user_id']       = $tweet->user_id;
                 $tweetData['message']       = $tweet->message;
                 $tweetData['created_at']    = $tweet->created_at;
                 $tweets[] = $tweetData;
@@ -79,7 +86,15 @@ class HomeController extends Controller
     }
     public function allUsers(Request $request)
     {   
-        $users                  = User::where('id','<>',$request->user()->id)->paginate(2);
+
+
+        //$users = User::getAllUsers();
+
+        //$user = new User('name' => 'Gaurav');
+        //$user->save();
+
+        //$users                  = User::where('id','<>',$request->user()->id)->paginate(2);
+        $users                  = User::allUsers()->paginate(2);
         $allUsers               = array('allUsers'=>$users);
         return view('allUsers',$allUsers);
     }
@@ -102,11 +117,37 @@ class HomeController extends Controller
             return "followed";
         }
     }
+    public function unFollow(Request $request){
+        $followed = Follow::where('user_id',$request->user()->id)->where('follow_user_id',$request->input('id'));
+        if($followed->first()){
+          if($followed->delete())
+            return "unfollowed";
+        } else return "not found";
+    }
     public function imageUpload(Request $request){
-        return view('imageUpload');
+        $user = User::find($request->User()->id);
+        if($user->photo){
+          if($user->photo=="defaultPhoto.jpg"){
+            return view('imageUpload');
+          }
+          else return redirect('/home');
+        }    
+        else{
+            return view('imageUpload');
+        }
     }
     public function uploadImage(Request $request){
-        $photo = $request->file('file');
+        if($request->hasFile('file')){
+          $photo      = $request->file('file');
+         //dd($request->hasFile('file'));
+          $photoName  = uniqid().$photo->getClientOriginalName() ;
+          $photo->move('gallery/images',$photoName);
+        } else {
+          $photoName = "defaultPhoto.jpg";
+        }
+        $user = User::find($request->user()->id);
+        $user->photo = $photoName;
+        $user->save();
         return redirect('/home');
     }
     

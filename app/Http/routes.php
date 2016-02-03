@@ -31,10 +31,16 @@ Route::post('/checkEmail','Controller@checkEmail');
 
 Route::group(['middleware' => 'web'], function () {
     Route::auth();
-    Route::match(['get','post'],'/home', 'HomeController@index');
-    Route::get('/allUsers','HomeController@allUsers');
-    Route::post('/newTweet','HomeController@newTweet');
-    Route::post('/newFollow','HomeController@newFollow');
-    Route::get('/imageUpload','HomeController@imageUpload');
-    Route::post('/uploadImage','HomeController@uploadImage');
+
+    //Routes for UserController
+    Route::match(['get','post'],'/home', 'UserController@index');
+    Route::get('/allUsers','UserController@allUsers');
+    Route::post('/newFollow','UserController@newFollow');
+    Route::post('/unFollow','UserController@unFollow');
+    Route::get('/imageUpload','UserController@imageUpload');
+    Route::post('/uploadImage','UserController@uploadImage');    
+
+    //Routes for TweetController
+    Route::post('/newTweet','TweetController@newTweet');
+    Route::post('/deleteTweet','TweetController@deleteTweet');
 });
