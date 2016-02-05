@@ -52,7 +52,7 @@
                 <!-- Left Side Of Navbar -->
                 <ul class="nav navbar-nav">
                     <li><a href="{{ url('/home') }}">Home</a></li>
-                    <li><a href="{{ url('/allUsers') }}">All Users</a></li>
+                    <li><a href="{{ route('users.all') }}">All Users</a></li>
                 </ul>
 
                 <!-- Right Side Of Navbar -->
@@ -69,7 +69,7 @@
                             
                             <ul class="dropdown-menu" role="menu">
                                 <li><a href="{{ url('/logout') }}"><i class="fa fa-btn fa-sign-out"></i>Logout</a></li>
-                                <li><a href="{{ url('/imageUpload') }}"><i class="fa fa-btn"></i>Edit Image</a></li>
+                                <li><a href="{{ route('image.upload') }}"><i class="fa fa-btn"></i>Edit Image</a></li>
                             </ul>
                         </li>
                     @endif
@@ -85,6 +85,7 @@
     @yield('content')
 
     <!-- JavaScripts -->
+    <script type="text/javascript" src="js/myjs.js"></script>
    
 </body>
 </html>

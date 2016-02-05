@@ -14,7 +14,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password',
+        'name', 'email', 'password','photo',
     ];
 
     /**
@@ -32,7 +32,7 @@ class User extends Authenticatable
     public function followers(){
         return $this->belongsToMany('App\User', 'follows', 'user_id', 'follow_user_id');
     }
-    public static function allUsers(){
-        return User::where('id','<>',Auth::user()->id);
+    public static function allUsers($page = 10){
+        return User::where('id','<>',Auth::user()->id)->paginate($page);
     }
 }

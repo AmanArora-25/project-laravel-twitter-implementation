@@ -20,36 +20,4 @@
     @endforeach
     <center>{{$allUsers->links()}}</center>
     </div>
-<script type="text/javascript">
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        }
-    });
-    function followToggle(id){
-        $.ajax({
-            type: "POST",
-            url: "{{url('newFollow')}}",
-            data: "id="+id,
-            success: function(html){
-                if(html=="Already Followed")
-                    $('#'+id).html("Already Followed <button class=\"btn btn-primary btn-xs\" onclick=\"return unfollow("+id+");\">Unfollow</button>"); 
-                //$("#status").html(data);
-            }
-        }); 
-    }
-    function unfollow(id){
-        $.ajax({
-            type: "POST",
-            url: "{{url('unFollow')}}",
-            data: "id="+id,
-            success: function(html){
-                if(html=="unfollowed")
-                    $('#'+id).html("unfollowed"); 
-                //$("#status").html(data);
-            }
-        }); 
-    }
-</script>
-
 @endsection

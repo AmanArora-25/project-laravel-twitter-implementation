@@ -79,40 +79,4 @@
         </div>
     </div>
 </div>
-<script type="text/javascript">
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        }
-        });
-    $("#registrationForm").validate();
-    $('#email').blur(function(){
-        var email = $('#email').val();
-        $.ajax({
-            type: "POST",
-            url: "{{url('checkEmail')}}",
-            data: "email="+email,
-            success: function(html){
-                if(html=="true"){
-                    $('#email_exists').html("Email Id Exists. please <a href={{ url('/login') }}> login"); 
-                    $('#invalidEmail').html(""); 
-                }else if(html=="false"){
-                    $('#email_exists').html("");
-                    $('#invalidEmail').html("");
-                }
-                //$("#status").html(data);
-            }
-        });
-    });
-    $('#password').blur(function(){
-        var password = $('#password').val();
-        if(password.length<6){
-            $('#password_min_length').html("Password must have atleast 6 characters"); 
-            $('#invalidPassword').html(""); 
-        } else {
-            $('#password_min_length').html("");
-            $('#invalidPassword').html("");
-        }
-    });
-</script>
 @endsection

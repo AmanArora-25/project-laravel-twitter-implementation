@@ -15,7 +15,8 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::post('/checkEmail','Controller@checkEmail');
+//Move this to users controller
+Route::post('/check_email',['as'=>'email.check', 'uses'=>'Controller@checkEmail']);
 
 /*
 |--------------------------------------------------------------------------
@@ -32,15 +33,20 @@ Route::post('/checkEmail','Controller@checkEmail');
 Route::group(['middleware' => 'web'], function () {
     Route::auth();
 
-    //Routes for UserController
+    //Routes for Users
     Route::match(['get','post'],'/home', 'UserController@index');
-    Route::get('/allUsers','UserController@allUsers');
-    Route::post('/newFollow','UserController@newFollow');
-    Route::post('/unFollow','UserController@unFollow');
-    Route::get('/imageUpload','UserController@imageUpload');
-    Route::post('/uploadImage','UserController@uploadImage');    
+    Route::get('/users',['as'=>'users.all', 'uses'=> 'UserController@allUsers']);
 
-    //Routes for TweetController
-    Route::post('/newTweet','TweetController@newTweet');
-    Route::post('/deleteTweet','TweetController@deleteTweet');
+    //Routes for Images
+    Route::get('/image/upload',['as' =>'image.upload', 'uses' => 'UserController@imageUpload']);
+    Route::post('/uploadimage','UserController@uploadImage');   
+
+    //Routes for Followers
+    Route::post('/follow', ['as' => 'user.follow', 'uses' => 'UserController@newFollow']); 
+    Route::post('/unfollow', ['as' => 'user.unfollow', 'uses' => 'UserController@unFollow']); 
+
+    //Routes for Tweets
+    Route::post('/tweet/new',['as'=>'tweet.new', 'uses'=>'TweetController@newTweet']);
+    Route::post('/tweet/delete',['as'=>'tweet.delete', 'uses'=> 'TweetController@deleteTweet']);
+    Route::get('images/profile/{userID}', 'UserController@getProfilePhoto'); 
 });

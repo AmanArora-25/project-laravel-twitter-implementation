@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection; 
+use Illuminate\Support\Collection as Collection; 
+use Illuminate\Support\Facades\Input;
+use Illuminate\Http\Response;
+
 use App\Tweet as Tweet;
 use App\User as User;
 use App\follow as Follow;
@@ -28,120 +31,86 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    function msort($array, $key, $sort_flags = SORT_REGULAR) {
-        if (is_array($array) && count($array) > 0) {
-            if (!empty($key)) {
-                $mapping = array();
-                foreach ($array as $k => $v) {
-                    $sort_key = '';
-                    if (!is_array($key)) {
-                        $sort_key = $v[$key];
-                    } else {
-                        // @TODO This should be fixed, now it will be sorted as string
-                        foreach ($key as $key_key) {
-                            $sort_key .= $v[$key_key];
-                        }
-                        $sort_flags = SORT_STRING;
-                    }
-                    $mapping[$k] = $sort_key;
-                }
-                asort($mapping, $sort_flags);
-                $sorted = array();
-                foreach ($mapping as $k => $v) {
-                    $sorted[] = $array[$k];
-                }
-                return $sorted;
-            }
-        }
-        return $array;
-    }
+
     public function index(Request $request)
     {   
         $user               = $request->user();
         $follows            = $user->followers();
-        $followscollection  = $follows->get();
-        $followscollection->add($user);
-        $tweets             =array();
-        foreach ($followscollection as $follower) {
-            foreach($follower->tweets()->get() as $tweet){
-              $tweetData                  = array();
-                if(empty($tweet->user->photo)){
-                  $tweetData['photo']         = "defaultPhoto.jpg";
-                } else {
-                  $tweetData['photo']         = $tweet->user->photo;
-                }
-                $tweetData['id']            = $tweet->id;
-                $tweetData['name']          = $tweet->user->name;
-                $tweetData['user_id']       = $tweet->user_id;
-                $tweetData['message']       = $tweet->message;
-                $tweetData['created_at']    = $tweet->created_at;
-                $tweets[] = $tweetData;
-            }
-        } 
-        $homeData               = array();
-        $tweets = $this->msort($tweets,array('created_at'));
-        $tweets = array_reverse($tweets);
-        $homeData['tweets']     = $tweets;
+        $followers  = $follows->get();
+        $followers->prepend($user);
+        $allTweets = new Collection;
+
+        foreach($followers as $follower){
+          $allTweets->prepend($follower->tweets);
+        }
+        $tweets = new Collection;
+        foreach ($allTweets as $tweet) {
+          foreach ($tweet as $key => $value) {
+            $tweets->prepend($value);
+          }
+        }
+        $tweets = $tweets->sortByDesc('created_at');
+        $homeData = array();
+        $homeData['tweets']       = $tweets;
+        $homeData['path_image']   = storage_path('photos');
         return view('home',$homeData);
     }
+
     public function allUsers(Request $request)
     {   
-
-
-        //$users = User::getAllUsers();
-
-        //$user = new User('name' => 'Gaurav');
-        //$user->save();
-
-        //$users                  = User::where('id','<>',$request->user()->id)->paginate(2);
-        $users                  = User::allUsers()->paginate(2);
+        $users                  = User::allUsers(2);
         $allUsers               = array('allUsers'=>$users);
         return view('allUsers',$allUsers);
     }
-    public function newTweet(Request $request)
-    {   
-        $tweet                  = new Tweet;
-        $tweet->message         = $request->input('tweetMessage');
-        $tweet->user_id         = Auth::User()->id;
-        $tweet->save();
-        return "success";
-    }
+
     public function newFollow(Request $request){
-        $followed = Follow::where('user_id',$request->user()->id)->where('follow_user_id',$request->input('id'));
-        if($followed->first())
-            return "Already Followed";
-        else{
-            DB::table('follows')->insert(
-            ['user_id' => $request->user()->id, 'follow_user_id' => $request->input('id')]
-            );
-            return "followed";
-        }
+
+      $followData                   = Input::all(); 
+      $user_id                      = Auth::user()->id; 
+      $followData                   = array_add($followData,'user_id',"$user_id");
+
+      $responseData                 = array();
+
+      if(Follow::isFollowing($followData)){
+        $responseData['status']     = false;
+        $responseData['message']    = "Already Followed";
+      } else {
+        Follow::firstOrCreate($followData);
+        $responseData['status']     = true;
+        $responseData['message']    = "Followed";
+      }
+      return response()->json($responseData);
     }
     public function unFollow(Request $request){
-        $followed = Follow::where('user_id',$request->user()->id)->where('follow_user_id',$request->input('id'));
-        if($followed->first()){
-          if($followed->delete())
-            return "unfollowed";
-        } else return "not found";
+      $followData = Input::all(); 
+      $user_id    = Auth::user()->id; 
+      $followData = array_add($followData,'user_id',"$user_id");
+
+      $responseData                 = array();
+
+      if(Follow::isFollowing($followData)){
+        if(Follow::unfollow($followData)){
+          $responseData['status']   = true;
+          $responseData['message']  = "unfollowed";
+        } else {
+          $responseData['status']   = false;
+          $responseData['message']  = "please try again later";
+        } 
+      } else {
+          $responseData['status']   = false;
+          $responseData['message']  = "You dont follow this user";;
+      } 
+      return response()->json($responseData);
     }
     public function imageUpload(Request $request){
         $user = User::find($request->User()->id);
-        if($user->photo){
-          if($user->photo=="defaultPhoto.jpg"){
-            return view('imageUpload');
-          }
-          else return redirect('/home');
-        }    
-        else{
-            return view('imageUpload');
-        }
+        return view('imageUpload');
     }
     public function uploadImage(Request $request){
         if($request->hasFile('file')){
           $photo      = $request->file('file');
-         //dd($request->hasFile('file'));
           $photoName  = uniqid().$photo->getClientOriginalName() ;
-          $photo->move('gallery/images',$photoName);
+          $photo->move('../storage/photos',$photoName);
         } else {
           $photoName = "defaultPhoto.jpg";
         }
@@ -151,5 +120,9 @@ class UserController extends Controller
         return redirect('/home');
     }
     
+    function getProfilePhoto(Request $request,$userID){
+        $filepath = storage_path() . '/photos/' . User::find($userID)->photo;
+        return Response()->download($filepath);
+      }
     
 }
